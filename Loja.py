@@ -1,11 +1,6 @@
-try:
-    from FichaPratica04.Arma import Arma
-    from FichaPratica04.Armadura import Armadura
-    from FichaPratica04.Pocao import Pocao
-except ModuleNotFoundError:
-    from Arma import Arma
-    from Armadura import Armadura
-    from Pocao import Pocao
+from Arma import Arma
+from Armadura import Armadura
+from Pocao import Pocao
 
 
 class Loja:

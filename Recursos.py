@@ -16,6 +16,7 @@ class Recursos:
     @staticmethod
     def localizarAudio(caminhoFicheiro):
         caminhos = []
+        baseDiretorio = os.path.dirname(os.path.abspath(__file__))
 
         if os.path.exists(caminhoFicheiro):
             return caminhoFicheiro
@@ -23,13 +24,16 @@ class Recursos:
         if os.path.isabs(caminhoFicheiro):
             caminhos.append(caminhoFicheiro)
         else:
+            caminhos.append(os.path.join(baseDiretorio, caminhoFicheiro))
+            caminhos.append(os.path.join(baseDiretorio, "musica", os.path.basename(caminhoFicheiro)))
+            caminhos.append(os.path.join(baseDiretorio, "assets", "audio", os.path.basename(caminhoFicheiro)))
             caminhos.append(os.path.join(os.getcwd(), caminhoFicheiro))
             caminhos.append(os.path.join(os.path.dirname(os.getcwd()), caminhoFicheiro))
             caminhos.append(os.path.join(os.path.dirname(os.path.dirname(os.getcwd())), caminhoFicheiro))
             caminhos.append(os.path.join(os.path.dirname(os.getcwd()), "musica", os.path.basename(caminhoFicheiro)))
             caminhos.append(os.path.join(os.path.dirname(os.path.dirname(os.getcwd())), "musica", os.path.basename(caminhoFicheiro)))
 
-        baseSuperior = os.path.abspath(os.path.join(os.getcwd(), ".."))
+        baseSuperior = os.path.abspath(os.path.join(baseDiretorio, ".."))
         if os.path.isdir(baseSuperior):
             caminhos.append(os.path.join(baseSuperior, "musica", os.path.basename(caminhoFicheiro)))
             caminhos.append(os.path.join(baseSuperior, "musica"))
@@ -38,7 +42,7 @@ class Recursos:
             if os.path.exists(caminho):
                 return caminho
 
-        diretorioMusica = os.path.abspath(os.path.join(os.getcwd(), "..", "musica"))
+        diretorioMusica = os.path.abspath(os.path.join(baseDiretorio, "musica"))
         if os.path.isdir(diretorioMusica):
             for nome in os.listdir(diretorioMusica):
                 caminho = os.path.join(diretorioMusica, nome)
@@ -156,3 +160,26 @@ class Recursos:
         Recursos.imprimirLinha()
         print(titulo.center(40))
         Recursos.imprimirLinha()
+
+    @staticmethod
+    def verificarDiretorioMusica():
+        # Verifica rapidamente se existe a pasta 'musica' em locais comuns.
+        possiveis = [
+            os.path.join(os.getcwd(), "musica"),
+            os.path.join(os.path.dirname(os.getcwd()), "musica"),
+            os.path.abspath(os.path.join(os.getcwd(), "..", "musica"))
+        ]
+        for p in possiveis:
+            if os.path.isdir(p):
+                print(f"Diretório 'musica' encontrado: {p}")
+                return p
+        print("Diretório 'musica' não encontrado.")
+        return None
+
+
+# Verificação rápida ao importar o módulo
+try:
+    Recursos.verificarDiretorioMusica()
+except Exception:
+    # Qualquer erro aqui não deve impedir o funcionamento do programa
+    pass

@@ -12,10 +12,7 @@
 # - Utilizar getters e setters tradicionais
 # - Completar os métodos assinalados com TODO
 # ============================================================
-try:
-    from FichaPratica04.Jogo import Jogo
-except ModuleNotFoundError:
-    from Jogo import Jogo
+from Jogo import Jogo
 
 import os
 

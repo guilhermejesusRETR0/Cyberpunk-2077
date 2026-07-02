@@ -1,15 +1,8 @@
-try:
-    from FichaPratica04.Inimigo import Inimigo
-    from FichaPratica04.Jogador import Jogador
-    from FichaPratica04.Loja import Loja
-    from FichaPratica04.Masmorra import Masmorra
-    from FichaPratica04.Recursos import Recursos
-except ModuleNotFoundError:
-    from Inimigo import Inimigo
-    from Jogador import Jogador
-    from Loja import Loja
-    from Masmorra import Masmorra
-    from Recursos import Recursos
+from Inimigo import Inimigo
+from Jogador import Jogador
+from Loja import Loja
+from Masmorra import Masmorra
+from Recursos import Recursos
 
 
 class Jogo:
