@@ -25,5 +25,5 @@ class Arma:
     def mostrarDados(self):
         print("Arma:", self.__nome)
         print("Bónus de ataque:", self.__bonusAtaque)
-        print("Preço:", self.__preco, "moedas")
+        print("Preço:", self.__preco, "créditos")
 

@@ -23,7 +23,7 @@ class Armadura:
         self.__preco = preco
 
     def mostrarDados(self):
-        print("Armadura:", self.__nome)
+        print("Blindagem:", self.__nome)
         print("Bónus de defesa:", self.__bonusDefesa)
-        print("Preço:", self.__preco, "moedas")
+        print("Preço:", self.__preco, "créditos")
 

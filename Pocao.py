@@ -24,6 +24,6 @@ class Pocao:
         self.__preco = preco
 
     def mostrarDados(self):
-        print("Poção:", self.__nome)
+        print("Nano kit:", self.__nome)
         print("Valor de cura:", self.__valorCura)
-        print("Preço:", self.__preco, "moedas")
+        print("Preço:", self.__preco, "créditos")

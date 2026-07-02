@@ -56,7 +56,7 @@ class Inimigo:
     def atacar(self, jogador):
         dano = max(1, self.__ataque - jogador.getDefesaTotal())
         jogador.receberDano(dano)
-        print(f"{self.__nome} atacou {jogador.getNome()} e causou {dano} de dano.")
+        print(f"{self.__nome} atingiu {jogador.getNome()} e causou {dano} de dano. O ferro fala mais alto do que a ética.")
 
     def estaVivo(self):
         return self.__vida > 0
@@ -64,6 +64,6 @@ class Inimigo:
     def mostrarEstado(self):
         print("\n===== ESTADO DO INIMIGO =====")
         print("Nome:", self.__nome)
-        print("Vida:", self.__vida)
+        print("Integridade:", self.__vida)
         print("Ataque:", self.__ataque)
         print("Defesa:", self.__defesa)

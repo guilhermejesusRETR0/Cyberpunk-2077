@@ -103,13 +103,13 @@ class Jogador:
     def atacar(self, inimigo):
         dano = self.getAtaqueTotal()
         inimigo.receberDano(dano)
-        print(f"{self.__nome} atacou {inimigo.getNome()} e causou {dano} de dano.")
+        print(f"{self.__nome} lançou um ataque em {inimigo.getNome()} e causou {dano} de dano. A cidade engole o som e devolve-o como mais um problema.")
 
     def curar(self, valor):
         self.__vida += valor
         if self.__vida > self.__vidaMaxima:
             self.__vida = self.__vidaMaxima
-        print(f"{self.__nome} recuperou {valor} de vida.")
+        print(f"{self.__nome} recuperou {valor} de integridade. O corpo ainda não desiste, o que já é um milagre com o estado em que está.")
 
     def ganharExperiencia(self, valor):
         self.__experiencia += valor
@@ -123,7 +123,7 @@ class Jogador:
         self.__ataque += 5
         self.__defesa += 2
         self.__vida = self.__vidaMaxima
-        print(f"{self.__nome} subiu para o nível {self.__nivel}!")
+        print(f"{self.__nome} subiu para o nível {self.__nivel}. O sistema reconheceu a tua sobrevivência. Isso, por si só, já é um insulto.")
         return True
 
     def ganharMoedas(self, valor):
@@ -157,27 +157,27 @@ class Jogador:
     def mostrarEstado(self):
         print("\n===== ESTADO DO JOGADOR =====")
         print("Nome:", self.__nome)
-        print("Vida:", self.__vida, "/", self.__vidaMaxima)
+        print("Integridade:", self.__vida, "/", self.__vidaMaxima)
         print("Nível:", self.__nivel)
         print("Experiência:", self.__experiencia)
-        print("Moedas:", self.__moedas)
+        print("Créditos:", self.__moedas)
         print("Ataque base:", self.__ataque)
         print("Defesa base:", self.__defesa)
         print("Ataque total:", self.getAtaqueTotal())
         print("Defesa total:", self.getDefesaTotal())
 
         if self.__arma is None:
-            print("Arma equipada: nenhuma")
+            print("Arma equipada: nenhuma. O mínimo possível para o mínimo possível.")
         else:
             print("Arma equipada:", self.__arma.getNome())
 
         if self.__armadura is None:
-            print("Armadura equipada: nenhuma")
+            print("Blindagem equipada: nenhuma. O corpo continua a ser o maior risco da operação.")
         else:
-            print("Armadura equipada:", self.__armadura.getNome())
+            print("Blindagem equipada:", self.__armadura.getNome())
 
         if self.__pocao is None:
-            print("Poção guardada: nenhuma")
+            print("Nano kit guardado: nenhum. A sobrevivência continua a ser um hábito ruim.")
         else:
-            print("Poção guardada:", self.__pocao.getNome())
+            print("Nano kit guardado:", self.__pocao.getNome())
 

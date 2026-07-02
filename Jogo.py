@@ -47,22 +47,22 @@ class Jogo:
         try:
             return input(mensagem)
         except (EOFError, KeyboardInterrupt):
-            print("\nEntrada encerrada. O jogo termina.")
+            print("\nA ligação com a rede caiu. O ciclo termina aqui.")
             self.__terminado = True
             return ""
 
     def iniciarJogo(self):
         self.mostrarIntroducao()
 
-        nome = self.lerOpcao("\nInsere o nome da tua personagem: ")
+        nome = self.lerOpcao("\nInsere o nome da tua mercenária: ")
 
         if self.__terminado:
             return
 
         if nome == "":
-            nome = "Joaquim"
-            print("Não escreveste nome. O sistema medieval atribuiu-te um nome altamente épico:")
-            print("Joaquim.")
+            nome = "Nyx"
+            print("Não escreveste nome. O sistema atribuiu-te um codinome de serviço:")
+            print("Nyx.")
 
         self.criarJogador(nome)
 
@@ -78,7 +78,7 @@ class Jogo:
             if opcao == "1":
                 Recursos.limparConsola()
                 self.__jogador.mostrarEstado()
-                Recursos.esperarEnter("Premir ENTER para voltar ao menu...")
+                Recursos.esperarEnter("Premir ENTER para voltar à rua...")
 
             elif opcao == "2":
                 self.explorarMasmorra()
@@ -91,17 +91,18 @@ class Jogo:
 
             elif opcao == "5":
                 Recursos.pararAudio()
-                print("\nDecidiste sair do jogo.")
-                print("A máquina do tempo fica para outro dia.")
-                print("O ano 1272 agradece a tua curta visita.")
+                print("\nDecidiste desaparecer da cidade.")
+                print("Os sensores da megacorporação nem notam a tua ausência.")
+                print("A tua conta de créditos continua a zero, como sempre.")
                 self.__terminado = True
 
             else:
                 print("\nOpção inválida.")
-                print("Até no ano 1272 era esperado saber escolher uma opção do menu.")
+                print("Até na sombra da cidade se esperava mais precisão.")
 
     def mostrarIntroducao(self):
         Recursos.limparConsola()
+        print("\033[33m")  # Amarelo
         Recursos.tocarAudio("assets/audio/intro.wav")
         Recursos.tocarAudioFundo("The-Rebel-Path-_Cyberpunk-2077-Soundtrack_.wav")
         Recursos.imprimirAscii(
@@ -112,29 +113,22 @@ class Jogo:
     ======================================
             """
         )
+        print("\033[0m")  # Reset
 
         Recursos.pausa(1)
 
-        print("\nAno 2077.")
+        print("\nNeon. Chuva. Máquinas a consumir o resto da tua sanidade.")
         Recursos.pausa(1)
-        print("A humanidade finalmente conseguiu viajar no tempo.")
+        print("És um mercenário contratado para entrar numa instalação fortificada.")
         Recursos.pausa(1)
-        print("Infelizmente, alguém decidiu testar a máquina numa sexta-feira à tarde.")
+        print("No fundo dessa estrutura, uma IA experimental prepara-se para tomar o controlo da cidade.")
         Recursos.pausa(1)
-        print("Como seria de esperar, correu mal.")
+        print("O teu trabalho é simples: infiltrar-te, sobreviver e destruir o núcleo antes que a megacorporação te use como peça de reposição.")
         print()
         Recursos.pausa(1)
-        print("Durante a viagem, ocorreu uma ruptura temporal.")
-        print("A tua personagem foi enviada para o ano 1272.")
-        print("Sem internet. Sem GPS. Sem carregador. Sem garantias.")
-        print()
-        Recursos.pausa(1)
-        print("A máquina do tempo caiu algures no fundo de várias masmorras medievais.")
-        print("Para regressares ao ano 2077, tens de sobreviver, lutar e recuperar o núcleo temporal.")
-        print()
-        Recursos.pausa(1)
-        print("Bem-vindo a Cyberdungeons.")
-        print("Um RPG medieval com problemas tecnológicos que ninguém pediu.")
+        print("Não há heróis aqui. Só gente com implantes, dívidas e má sorte.")
+        print("Bem-vindo ao abismo digital.")
+        print("O teu relógio já está a contar os segundos até a primeira falha de sistema.")
 
     def criarJogador(self, nome):
         vidaMaxima = 100
@@ -146,73 +140,72 @@ class Jogo:
 
         self.__jogador = Jogador(nome, vidaMaxima, ataque, defesa, nivel, experiencia, moedas)
 
-        print("\nPersonagem criada com sucesso.")
+        print("\nPerfil activado com sucesso.")
         print("Nome:", nome)
-        print("Ano de origem: 2077")
-        print("Ano atual: 1272")
-        print("Estado emocional: confuso, mas funcional.")
+        print("Classificação: Mercenário de rua")
+        print("Estado: com um crédito e vários problemas")
 
     def mostrarMenuPrincipal(self):
         Recursos.limparConsola()
         print("\n===== MENU PRINCIPAL =====")
-        print("Masmorra atual:", self.__masmorraAtual)
-        print("1 - Ver personagem")
-        print("2 - Explorar masmorra")
-        print("3 - Visitar loja")
-        print("4 - Descansar")
+        print("Zona atual:", self.__masmorraAtual)
+        print("1 - Ver perfil")
+        print("2 - Explorar zona")
+        print("3 - Visitar mercado negro")
+        print("4 - Procurar assistência")
         print("5 - Sair")
 
     def criarMasmorraAtual(self):
         if self.__masmorraAtual == 1:
             return Masmorra(
                 1,
-                "Masmorra da Floresta Perdida",
-                "Uma floresta húmida onde até as árvores parecem julgar as tuas escolhas."
+                "Bairro controlado por gangues",
+                "Neon a piscar, portas corroídas e um cheiro a pólvora que nunca te abandona."
             )
 
         elif self.__masmorraAtual == 2:
             return Masmorra(
                 2,
-                "Cripta dos Ecos Temporais",
-                "Uma cripta onde se ouvem vozes do passado, do futuro e de alunos a perguntar se isto sai no teste."
+                "Estação de metro abandonada",
+                "Túneis de ferro, cablagem exposta e ecos que parecem vir de dentro da tua cabeça."
             )
 
         elif self.__masmorraAtual == 3:
             return Masmorra(
                 3,
-                "Fortaleza do Gelo Eterno",
-                "Uma fortaleza gelada. O frio é tanto que até os bugs congelam."
+                "Laboratório clandestino",
+                "Água a pingar, sistemas em falha e um cheiro químico que te faz duvidar da tua própria genética."
             )
 
         elif self.__masmorraAtual == 4:
             return Masmorra(
                 4,
-                "Templo da Fenda Temporal",
-                "Um templo instável onde ontem, hoje e amanhã discutem quando é que se assinam as folhas."
+                "Central de dados",
+                "Painéis de vidro, servidores a rugir e a sensação de que alguém te está a observar desde o silêncio."
             )
 
         else:
             return Masmorra(
                 5,
-                "Câmara da Máquina do Tempo",
-                "A última masmorra. A máquina está perto. O Wi-Fi ainda não."
+                "Complexo industrial automatizado",
+                "Robôs a trabalhar, alarmes a gritar e o último piso a cheirar a futuro em decomposição."
             )
 
     def criarInimigoDaMasmorra(self):
         if self.__masmorraAtual == 1:
-            return Inimigo("Goblin da Floresta", 30, 7, 2, 20, 15)
+            return Inimigo("Ganger de neon", 30, 7, 2, 20, 15)
 
         elif self.__masmorraAtual == 2:
-            return Inimigo("Esqueleto da Cripta", 45, 10, 4, 30, 25)
+            return Inimigo("Mercenário com implantes", 45, 10, 4, 30, 25)
 
         elif self.__masmorraAtual == 3:
-            return Inimigo("Cavaleiro de Gelo", 65, 13, 6, 45, 35)
+            return Inimigo("Andróide de segurança", 65, 13, 6, 45, 35)
 
         elif self.__masmorraAtual == 4:
-            return Inimigo("Cultista da Fenda", 85, 17, 8, 60, 50)
+            return Inimigo("Drone de combate", 85, 17, 8, 60, 50)
 
         else:
-            return Inimigo("Guardião do Núcleo Temporal", 120, 22, 12, 100, 100)
+            return Inimigo("IA de segurança", 120, 22, 12, 100, 100)
 
     def explorarMasmorra(self):
         masmorra = self.criarMasmorraAtual()
@@ -220,11 +213,11 @@ class Jogo:
 
         masmorra.mostrarInfo()
 
-        print("\nAo entrares, sentes uma energia estranha no ar.")
-        print("O teu relógio futurista mostra a seguinte mensagem:")
-        print('"Erro 1272: realidade medieval não suportada."')
+        print("\nAo entrares, sentes o pulso da cidade na pele.")
+        print("O teu visor dispara uma mensagem de alerta:")
+        print('"Falha de sistema detectada. A rua não está a cooperar."')
 
-        print("\nUm inimigo apareceu!")
+        print("\nUm alvo apareceu na tua frente!")
         print("Inimigo:", self.__inimigoAtual.getNome())
 
         self.iniciarCombate()
@@ -234,7 +227,7 @@ class Jogo:
 
         while True:
             print("\n1 - Atacar")
-            print("2 - Usar poção")
+            print("2 - Usar nano kit")
             print("3 - Ver estado")
             print("4 - Fugir")
             opcao = self.lerOpcao("Escolha: ")
@@ -255,9 +248,9 @@ class Jogo:
 
             elif opcao == "2":
                 if self.__jogador.usarPocao():
-                    print("Usaste uma poção.")
+                    print("Usaste um nano kit.")
                 else:
-                    print("Não tens poções guardadas.")
+                    print("Não tens nano kits guardados.")
 
                 if self.__inimigoAtual.estaVivo():
                     self.__inimigoAtual.atacar(self.__jogador)
@@ -278,38 +271,38 @@ class Jogo:
 
     def processarVitoria(self):
         print("\nVitória!")
-        print(f"{self.__jogador.getNome()} derrotou {self.__inimigoAtual.getNome()}.")
+        print(f"{self.__jogador.getNome()} destruiu {self.__inimigoAtual.getNome()}.")
         self.__jogador.ganharExperiencia(self.__inimigoAtual.getExperiencia())
         self.__jogador.ganharMoedas(self.__inimigoAtual.getMoedas())
 
         if self.__masmorraAtual == 5:
-            print("Conseguiste recuperar o núcleo temporal e regressar ao futuro!")
+            print("Conseguiste invadir o núcleo da IA e cortar o controlo da megacorporação.")
             self.__terminado = True
         else:
-            print("Recebeste recompensas e podes avançar para a próxima masmorra.")
+            print("Recebeste créditos e podes avançar para a próxima zona.")
             self.avancarMasmorra()
 
     def processarDerrota(self):
         print("\nDerrota!")
-        print("Ficaste sem vida. A tua aventura termina aqui.")
+        print("Os teus implantes falham. A cidade não te esquece e tu deixas de existir em modo de economia.")
         self.__terminado = True
 
     def avancarMasmorra(self):
         if self.__masmorraAtual < 5:
             self.__masmorraAtual += 1
-            print(f"Avançaste para a masmorra {self.__masmorraAtual}.")
+            print(f"Avançaste para a zona {self.__masmorraAtual}.")
         else:
-            print("Já atingiste a última masmorra.")
+            print("Já atingiste o último ponto da rede.")
 
     def visitarLoja(self):
         self.__loja.gerarProdutos(self.__masmorraAtual)
         self.__loja.mostrarProdutos()
 
-        print("\n===== MENU DA LOJA =====")
-        print("1 - Comprar arma")
-        print("2 - Comprar armadura")
-        print("3 - Comprar poção")
-        print("4 - Sair da loja")
+        print("\n===== MERCADO NEGRO =====")
+        print("1 - Comprar arma inteligente")
+        print("2 - Comprar blindagem cibernética")
+        print("3 - Comprar nano kit")
+        print("4 - Sair do mercado")
 
         opcao = input("Escolha: ")
 
@@ -323,19 +316,19 @@ class Jogo:
             self.__loja.comprarPocao(self.__jogador)
 
         elif opcao == "4":
-            print("\nSaíste da loja.")
-            print("O ferreiro grita: 'Volta sempre! E traz moedas, não aceitamos MB Way!'")
+            print("\nSaíste do mercado.")
+            print("O vendedor murmura: 'Volta quando estiveres mais desesperado e com mais créditos.'")
 
         else:
-            print("\nOpção inválida na loja.")
-            print("O ferreiro suspira medievalmente.")
+            print("\nOpção inválida no mercado.")
+            print("O vendedor encolhe os ombros como se a culpa fosse do sistema.")
 
     def descansar(self):
         if self.__jogador is not None:
             self.__jogador.curar(25)
-            print("Descansaste e recuperaste parte da tua vida.")
+            print("Entraste na clínica clandestina e recuperaste parte da tua integridade.")
         else:
-            print("Ainda não existe um jogador criado.")
+            print("Ainda não existe uma mercenária criada.")
 
     def verificarFimDoJogo(self):
         return self.__terminado or (self.__jogador is not None and not self.__jogador.estaVivo())

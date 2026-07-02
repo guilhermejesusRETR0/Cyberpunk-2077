@@ -24,7 +24,7 @@ class Masmorra:
         self.__descricao = descricao
 
     def mostrarInfo(self):
-        print("\n===== MASMORRA ATUAL =====")
+        print("\n===== ZONA ATUAL =====")
         print("Número:", self.__numero)
         print("Nome:", self.__nome)
         print("Descrição:", self.__descricao)
