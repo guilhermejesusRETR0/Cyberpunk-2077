@@ -26,6 +26,12 @@ class Inimigo:
     def getMoedas(self):
         return self.__moedas
 
+    def getRecompensaExperiencia(self):
+        return self.__experiencia
+
+    def getRecompensaMoedas(self):
+        return self.__moedas
+
     def setNome(self, nome):
         self.__nome = nome
 
@@ -56,7 +62,7 @@ class Inimigo:
     def atacar(self, jogador):
         dano = max(1, self.__ataque - jogador.getDefesaTotal())
         jogador.receberDano(dano)
-        print(f"{self.__nome} atingiu {jogador.getNome()} e causou {dano} de dano. O ferro fala mais alto do que a ética.")
+        print(f"{self.__nome} atingiu {jogador.getNome()} e causou {dano} de dano.")
 
     def estaVivo(self):
         return self.__vida > 0
@@ -67,3 +73,5 @@ class Inimigo:
         print("Integridade:", self.__vida)
         print("Ataque:", self.__ataque)
         print("Defesa:", self.__defesa)
+        print("Recompensa de experiencia:", self.__experiencia)
+        print("Recompensa de moedas:", self.__moedas)

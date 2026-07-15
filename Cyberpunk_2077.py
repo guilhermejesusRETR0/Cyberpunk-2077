@@ -1,11 +1,10 @@
 # ============================================================
-# CYBERDUNGEONS
+# CYBERPUNK_2077
 # Ficha Prática de Programação Orientada a Objetos em Python
 #
 # Tema:
-# Uma personagem do ano 2077 viaja acidentalmente para o ano 1272
-# após uma ruptura temporal. Para regressar à sua realidade,
-# terá de atravessar masmorras medievais e encontrar a máquina do tempo.
+# Jogo de ação e exploração em ambiente cyberpunk, com combate
+# por turnos, loja, inventário, caminhos não lineares e boss final.
 #
 # Regras da ficha:
 # - Utilizar atributos privados
@@ -13,8 +12,6 @@
 # - Completar os métodos assinalados com TODO
 # ============================================================
 from Jogo import Jogo
-
-import os
 
 
 def main():

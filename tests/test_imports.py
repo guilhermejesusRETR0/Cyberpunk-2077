@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def test_imports_work_from_project_root():
-    for module_name in ["Cyberdungeons", "Jogo", "Jogador", "Inimigo", "Loja", "Masmorra", "Arma", "Armadura", "Pocao", "Recursos"]:
+    for module_name in ["Cyberpunk_2077", "Jogo", "Jogador", "Inimigo", "Loja", "Masmorra", "Arma", "Armadura", "Pocao", "Recursos", "Afterlife", "Companheiro"]:
         module = importlib.import_module(module_name)
         assert module is not None
 

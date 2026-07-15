@@ -3,6 +3,7 @@ from Jogador import Jogador
 from Loja import Loja
 from Masmorra import Masmorra
 from Recursos import Recursos
+from Afterlife import Afterlife
 
 
 class Jogo:
@@ -11,7 +12,43 @@ class Jogo:
         self.__masmorraAtual = 1
         self.__inimigoAtual = None
         self.__loja = Loja()
+        self.__afterlife = Afterlife()
         self.__terminado = False
+        self.__totalZonas = 5
+        self.__descansosUsados = 0
+        self.__descansosMaximos = self.__totalZonas // 3
+        self.__zonas = {
+            1: {
+                "nome": "Bairro controlado por gangues",
+                "descricao": "Neon a piscar, portas corroidas e um cheiro a polvora que nunca te abandona.",
+                "caminhos": [2, 3],
+                "inimigo": ("Ganger de neon", 30, 7, 2, 20, 15),
+            },
+            2: {
+                "nome": "Estacao de metro abandonada",
+                "descricao": "Tuneis de ferro, cablagem exposta e ecos que parecem vir de dentro da tua cabeca.",
+                "caminhos": [3, 4],
+                "inimigo": ("Mercenario com implantes", 45, 10, 4, 30, 25),
+            },
+            3: {
+                "nome": "Laboratorio clandestino",
+                "descricao": "Agua a pingar, sistemas em falha e um cheiro quimico que te faz duvidar da tua propria genetica.",
+                "caminhos": [4, 5],
+                "inimigo": ("Androide de seguranca", 65, 13, 6, 45, 35),
+            },
+            4: {
+                "nome": "Central de dados",
+                "descricao": "Paineis de vidro, servidores a rugir e a sensacao de que alguem te esta a observar desde o silencio.",
+                "caminhos": [5],
+                "inimigo": ("Drone de combate", 85, 17, 8, 60, 50),
+            },
+            5: {
+                "nome": "Nucleo da IA",
+                "descricao": "O ultimo piso. O coracao da maquina. Aqui termina a fuga ou termina a tua historia.",
+                "caminhos": [],
+                "inimigo": ("IA de seguranca", 120, 22, 12, 100, 100),
+            },
+        }
 
     def getJogador(self):
         return self.__jogador
@@ -45,90 +82,109 @@ class Jogo:
 
     def lerOpcao(self, mensagem):
         try:
-            return input(mensagem)
+            return input(mensagem).strip()
         except (EOFError, KeyboardInterrupt):
-            print("\nA ligação com a rede caiu. O ciclo termina aqui.")
+            print("\nA ligacao com a rede caiu. O ciclo termina aqui.")
             self.__terminado = True
             return ""
+
+    def lerInteiroEntre(self, mensagem, minimo, maximo):
+        while not self.__terminado:
+            valorTexto = self.lerOpcao(mensagem)
+            if self.__terminado:
+                return None
+
+            try:
+                valor = int(valorTexto)
+            except ValueError:
+                print("Entrada invalida.")
+                continue
+
+            if minimo <= valor <= maximo:
+                return valor
+
+            print(f"Escolhe um valor entre {minimo} e {maximo}.")
+
+        return None
+
+    def esperarEnterSeguro(self, mensagem):
+        try:
+            input("\n" + mensagem)
+        except (EOFError, KeyboardInterrupt):
+            pass
+
+    def __dadosZona(self, numeroZona):
+        return self.__zonas.get(numeroZona, self.__zonas[self.__totalZonas])
 
     def iniciarJogo(self):
         self.mostrarIntroducao()
 
-        nome = self.lerOpcao("\nInsere o nome da tua mercenária: ")
-
+        nome = self.lerOpcao("\nInsere o nome da tua mercenaria: ")
         if self.__terminado:
             return
 
         if nome == "":
             nome = "Nyx"
-            print("Não escreveste nome. O sistema atribuiu-te um codinome de serviço:")
-            print("Nyx.")
+            print("Nao escreveste nome. O sistema atribuiu-te um codinome de servico: Nyx.")
 
         self.criarJogador(nome)
 
-        while self.__terminado is False:
+        while not self.__terminado:
             self.mostrarMenuPrincipal()
-            opcao = self.lerOpcao("Escolha: ")
-
-            if self.__terminado:
+            opcao = self.lerInteiroEntre("Escolha: ", 1, 6)
+            if self.__terminado or opcao is None:
                 break
 
             Recursos.limparConsola()
 
-            if opcao == "1":
-                Recursos.limparConsola()
+            if opcao == 1:
                 self.__jogador.mostrarEstado()
-                Recursos.esperarEnter("Premir ENTER para voltar à rua...")
+                self.esperarEnterSeguro("Premir ENTER para voltar a rua...")
 
-            elif opcao == "2":
+            elif opcao == 2:
                 self.explorarMasmorra()
 
-            elif opcao == "3":
+            elif opcao == 3:
                 self.visitarLoja()
 
-            elif opcao == "4":
+            elif opcao == 4:
+                self.visitarAfterlife()
+
+            elif opcao == 5:
                 self.descansar()
 
-            elif opcao == "5":
+            elif opcao == 6:
                 Recursos.pararAudio()
                 print("\nDecidiste desaparecer da cidade.")
-                print("Os sensores da megacorporação nem notam a tua ausência.")
-                print("A tua conta de créditos continua a zero, como sempre.")
                 self.__terminado = True
-
-            else:
-                print("\nOpção inválida.")
-                print("Até na sombra da cidade se esperava mais precisão.")
 
     def mostrarIntroducao(self):
         Recursos.limparConsola()
-        print("\033[33m")  # Amarelo
+        print("\033[33m")
         Recursos.tocarAudio("assets/audio/intro.wav")
         Recursos.tocarAudioFundo("The-Rebel-Path-_Cyberpunk-2077-Soundtrack_.wav")
         Recursos.imprimirAscii(
             "assets/ascii/logo.txt",
             """
     ======================================
-               CYBERDUNGEONS
+              CYBERPUNK_2077
     ======================================
             """
         )
-        print("\033[0m")  # Reset
+        print("\033[0m")
 
         Recursos.pausa(1)
-
-        print("\nNeon. Chuva. Máquinas a consumir o resto da tua sanidade.")
+        print("\nNeon. Chuva. Maquinas a consumir o resto da tua sanidade.")
         Recursos.pausa(1)
-        print("És um mercenário contratado para entrar numa instalação fortificada.")
+        print("Es um mercenario contratado para entrar numa instalacao fortificada.")
         Recursos.pausa(1)
         print("No fundo dessa estrutura, uma IA experimental prepara-se para tomar o controlo da cidade.")
         Recursos.pausa(1)
-        print("O teu trabalho é simples: infiltrar-te, sobreviver e destruir o núcleo antes que a megacorporação te use como peça de reposição.")
+        print("O teu trabalho e simples: infiltrar-te, sobreviver e destruir o nucleo antes que a megacorporacao te use como peca de reposicao.")
         print()
         Recursos.pausa(1)
-        print("Não há heróis aqui. Só gente com implantes, dívidas e má sorte.")
+        print("Nao ha herois aqui. So gente com implantes, dividas e ma sorte.")
         print("Bem-vindo ao abismo digital.")
-        print("O teu relógio já está a contar os segundos até a primeira falha de sistema.")
 
     def criarJogador(self, nome):
         vidaMaxima = 100
@@ -142,193 +198,238 @@ class Jogo:
 
         print("\nPerfil activado com sucesso.")
         print("Nome:", nome)
-        print("Classificação: Mercenário de rua")
-        print("Estado: com um crédito e vários problemas")
+        print("Classificacao: Mercenario de rua")
+        print("Estado: com um credito e varios problemas")
 
     def mostrarMenuPrincipal(self):
         Recursos.limparConsola()
         print("\n===== MENU PRINCIPAL =====")
         print("Zona atual:", self.__masmorraAtual)
+        print("Descansos usados:", self.__descansosUsados, "/", self.__descansosMaximos)
         print("1 - Ver perfil")
         print("2 - Explorar zona")
         print("3 - Visitar mercado negro")
-        print("4 - Procurar assistência")
-        print("5 - Sair")
+        print("4 - Visitar Afterlife")
+        print("5 - Procurar assistencia")
+        print("6 - Sair")
 
     def criarMasmorraAtual(self):
-        if self.__masmorraAtual == 1:
-            return Masmorra(
-                1,
-                "Bairro controlado por gangues",
-                "Neon a piscar, portas corroídas e um cheiro a pólvora que nunca te abandona."
-            )
-
-        elif self.__masmorraAtual == 2:
-            return Masmorra(
-                2,
-                "Estação de metro abandonada",
-                "Túneis de ferro, cablagem exposta e ecos que parecem vir de dentro da tua cabeça."
-            )
-
-        elif self.__masmorraAtual == 3:
-            return Masmorra(
-                3,
-                "Laboratório clandestino",
-                "Água a pingar, sistemas em falha e um cheiro químico que te faz duvidar da tua própria genética."
-            )
-
-        elif self.__masmorraAtual == 4:
-            return Masmorra(
-                4,
-                "Central de dados",
-                "Painéis de vidro, servidores a rugir e a sensação de que alguém te está a observar desde o silêncio."
-            )
-
-        else:
-            return Masmorra(
-                5,
-                "Complexo industrial automatizado",
-                "Robôs a trabalhar, alarmes a gritar e o último piso a cheirar a futuro em decomposição."
-            )
+        dados = self.__dadosZona(self.__masmorraAtual)
+        return Masmorra(
+            self.__masmorraAtual,
+            dados["nome"],
+            dados["descricao"],
+            dados["caminhos"]
+        )
 
     def criarInimigoDaMasmorra(self):
-        if self.__masmorraAtual == 1:
-            return Inimigo("Ganger de neon", 30, 7, 2, 20, 15)
-
-        elif self.__masmorraAtual == 2:
-            return Inimigo("Mercenário com implantes", 45, 10, 4, 30, 25)
-
-        elif self.__masmorraAtual == 3:
-            return Inimigo("Andróide de segurança", 65, 13, 6, 45, 35)
-
-        elif self.__masmorraAtual == 4:
-            return Inimigo("Drone de combate", 85, 17, 8, 60, 50)
-
-        else:
-            return Inimigo("IA de segurança", 120, 22, 12, 100, 100)
+        dados = self.__dadosZona(self.__masmorraAtual)
+        return Inimigo(*dados["inimigo"])
 
     def explorarMasmorra(self):
+        if self.__jogador is None:
+            print("Ainda nao existe uma mercenaria criada.")
+            return
+
         masmorra = self.criarMasmorraAtual()
         self.__inimigoAtual = self.criarInimigoDaMasmorra()
 
         masmorra.mostrarInfo()
-
         print("\nAo entrares, sentes o pulso da cidade na pele.")
-        print("O teu visor dispara uma mensagem de alerta:")
-        print('"Falha de sistema detectada. A rua não está a cooperar."')
-
-        print("\nUm alvo apareceu na tua frente!")
+        print("Um alvo apareceu na tua frente!")
         print("Inimigo:", self.__inimigoAtual.getNome())
 
         self.iniciarCombate()
 
+    def __contraAtacarSeNecessario(self):
+        if self.__inimigoAtual is not None and self.__inimigoAtual.estaVivo():
+            self.__inimigoAtual.atacar(self.__jogador)
+            if not self.__jogador.estaVivo():
+                self.processarDerrota()
+                return True
+        return False
+
     def iniciarCombate(self):
+        if self.__jogador is None or self.__inimigoAtual is None:
+            print("Nao ha combate activo.")
+            return
+
         print("\n===== COMBATE =====")
 
-        while True:
+        while not self.__terminado and self.__jogador.estaVivo() and self.__inimigoAtual.estaVivo():
             print("\n1 - Atacar")
-            print("2 - Usar nano kit")
-            print("3 - Ver estado")
-            print("4 - Fugir")
-            opcao = self.lerOpcao("Escolha: ")
+            print("2 - Usar MaxDoc")
+            print("3 - Usar consumivel")
+            print("4 - Ver estado")
+            print("5 - Fugir")
+            opcao = self.lerInteiroEntre("Escolha: ", 1, 5)
 
-            if self.__terminado:
+            if self.__terminado or opcao is None:
                 break
 
-            if opcao == "1":
+            if opcao == 1:
                 self.__jogador.atacar(self.__inimigoAtual)
                 if not self.__inimigoAtual.estaVivo():
                     self.processarVitoria()
                     break
-
-                self.__inimigoAtual.atacar(self.__jogador)
-                if not self.__jogador.estaVivo():
-                    self.processarDerrota()
+                if self.__contraAtacarSeNecessario():
                     break
 
-            elif opcao == "2":
+            elif opcao == 2:
                 if self.__jogador.usarPocao():
-                    print("Usaste um nano kit.")
+                    if self.__inimigoAtual.estaVivo() and self.__contraAtacarSeNecessario():
+                        break
                 else:
-                    print("Não tens nano kits guardados.")
-
-                if self.__inimigoAtual.estaVivo():
-                    self.__inimigoAtual.atacar(self.__jogador)
-                    if not self.__jogador.estaVivo():
-                        self.processarDerrota()
+                    print("Nao tens MaxDocs guardados.")
+                    if self.__contraAtacarSeNecessario():
                         break
 
-            elif opcao == "3":
+            elif opcao == 3:
+                if self.__jogador.usarConsumivel(self.__inimigoAtual):
+                    if not self.__inimigoAtual.estaVivo():
+                        self.processarVitoria()
+                        break
+                    if self.__contraAtacarSeNecessario():
+                        break
+                else:
+                    print("Nao tens consumiveis guardados.")
+                    if self.__contraAtacarSeNecessario():
+                        break
+
+            elif opcao == 4:
                 self.__jogador.mostrarEstado()
                 self.__inimigoAtual.mostrarEstado()
+                if self.__contraAtacarSeNecessario():
+                    break
 
-            elif opcao == "4":
+            elif opcao == 5:
                 print("Fugiste do combate.")
                 break
 
-            else:
-                print("Opção inválida.")
+    def escolherProximaZona(self, caminhos):
+        if not caminhos:
+            return None
+
+        print("\nCaminhos disponiveis:")
+        for indice, zona in enumerate(caminhos, start=1):
+            dados = self.__dadosZona(zona)
+            print(f"{indice} - Zona {zona}: {dados['nome']}")
+
+        escolha = self.lerInteiroEntre(f"Escolhe um caminho (1-{len(caminhos)}): ", 1, len(caminhos))
+        if self.__terminado or escolha is None:
+            return None
+
+        return caminhos[escolha - 1]
 
     def processarVitoria(self):
-        print("\nVitória!")
-        print(f"{self.__jogador.getNome()} destruiu {self.__inimigoAtual.getNome()}.")
-        self.__jogador.ganharExperiencia(self.__inimigoAtual.getExperiencia())
-        self.__jogador.ganharMoedas(self.__inimigoAtual.getMoedas())
+        print("\nVitoria!")
+        print(f"{self.__jogador.getNome()} derrotou {self.__inimigoAtual.getNome()}.")
 
-        if self.__masmorraAtual == 5:
-            print("Conseguiste invadir o núcleo da IA e cortar o controlo da megacorporação.")
+        xpBase = self.__inimigoAtual.getExperiencia()
+        bonusXP = self.__jogador.getTotalBonusExperienciaCompanheiros()
+        xpTotal = xpBase + (xpBase * bonusXP // 100)
+        if bonusXP:
+            print(f"Os teus companheiros aumentam a experiencia recebida em {bonusXP}%.")
+
+        self.__jogador.ganharExperiencia(xpTotal)
+        self.__jogador.ganharMoedas(self.__inimigoAtual.getMoedas())
+        self.__inimigoAtual = None
+
+        if self.__masmorraAtual >= self.__totalZonas:
+            print("Conseguiste destruir o nucleo da IA e salvar a cidade.")
+            Recursos.pararAudio()
             self.__terminado = True
-        else:
-            print("Recebeste créditos e podes avançar para a próxima zona.")
-            self.avancarMasmorra()
+            return
+
+        caminhos = self.__dadosZona(self.__masmorraAtual)["caminhos"]
+        if not caminhos:
+            print("Nao ha mais caminhos disponiveis.")
+            self.__terminado = True
+            return
+
+        proximaZona = self.escolherProximaZona(caminhos)
+        if proximaZona is not None:
+            self.__masmorraAtual = proximaZona
+            print(f"Seguiste para a zona {self.__masmorraAtual}.")
 
     def processarDerrota(self):
         print("\nDerrota!")
-        print("Os teus implantes falham. A cidade não te esquece e tu deixas de existir em modo de economia.")
+        print("Os teus implantes falham. A cidade nao te esquece.")
+        Recursos.pararAudio()
         self.__terminado = True
 
     def avancarMasmorra(self):
-        if self.__masmorraAtual < 5:
+        if self.__masmorraAtual < self.__totalZonas:
             self.__masmorraAtual += 1
-            print(f"Avançaste para a zona {self.__masmorraAtual}.")
+            print(f"Avancaste para a zona {self.__masmorraAtual}.")
         else:
-            print("Já atingiste o último ponto da rede.")
+            print("Ja atingiste o ultimo ponto da rede.")
 
     def visitarLoja(self):
+        if self.__jogador is None:
+            print("Ainda nao existe uma mercenaria criada.")
+            return
+
         self.__loja.gerarProdutos(self.__masmorraAtual)
-        self.__loja.mostrarProdutos()
 
-        print("\n===== MERCADO NEGRO =====")
-        print("1 - Comprar arma inteligente")
-        print("2 - Comprar blindagem cibernética")
-        print("3 - Comprar nano kit")
-        print("4 - Sair do mercado")
+        while not self.__terminado:
+            Recursos.limparConsola()
+            self.__loja.mostrarProdutos()
+            if not self.__loja.getItensDisponiveis():
+                self.esperarEnterSeguro("A loja ficou sem stock. Pressiona ENTER para sair...")
+                return
 
-        opcao = input("Escolha: ")
+            print("\n0 - Sair do mercado")
+            escolha = self.lerInteiroEntre(
+                f"Escolhe um item (0-{len(self.__loja.getItensDisponiveis())}): ",
+                0,
+                len(self.__loja.getItensDisponiveis())
+            )
 
-        if opcao == "1":
-            self.__loja.comprarArma(self.__jogador)
+            if self.__terminado or escolha is None:
+                return
 
-        elif opcao == "2":
-            self.__loja.comprarArmadura(self.__jogador)
+            if escolha == 0:
+                print("Saiste do mercado.")
+                return
 
-        elif opcao == "3":
-            self.__loja.comprarPocao(self.__jogador)
+            self.__loja.comprarItem(self.__jogador, escolha)
+            if not self.__loja.getItensDisponiveis():
+                self.esperarEnterSeguro("A loja ficou sem stock. Pressiona ENTER para sair...")
+                return
 
-        elif opcao == "4":
-            print("\nSaíste do mercado.")
-            print("O vendedor murmura: 'Volta quando estiveres mais desesperado e com mais créditos.'")
+            self.esperarEnterSeguro("Pressiona ENTER para continuar a ver a loja...")
 
-        else:
-            print("\nOpção inválida no mercado.")
-            print("O vendedor encolhe os ombros como se a culpa fosse do sistema.")
+    def visitarAfterlife(self):
+        if self.__jogador is None:
+            print("Ainda nao existe uma mercenaria criada.")
+            return
+
+        while not self.__terminado:
+            self.__afterlife.mostrarMercenarios(self.__jogador)
+            escolha = self.lerInteiroEntre("Escolhe um mercenario (1-5): ", 1, 5)
+
+            if self.__terminado or escolha is None:
+                return
+
+            if escolha == 5:
+                print("\nSaiste do Afterlife.")
+                return
+
+            self.__afterlife.mostrarDetalhesMercenario(self.__jogador, escolha)
 
     def descansar(self):
-        if self.__jogador is not None:
-            self.__jogador.curar(25)
-            print("Entraste na clínica clandestina e recuperaste parte da tua integridade.")
-        else:
-            print("Ainda não existe uma mercenária criada.")
+        if self.__jogador is None:
+            print("Ainda nao existe uma mercenaria criada.")
+            return
+
+        if self.__descansosUsados >= self.__descansosMaximos:
+            print("Ja atingiste o limite de descansos.")
+            return
+
+        self.__jogador.curar(25)
+        self.__descansosUsados += 1
+        print(f"Descanso usado. Total: {self.__descansosUsados}/{self.__descansosMaximos}.")
 
     def verificarFimDoJogo(self):
         return self.__terminado or (self.__jogador is not None and not self.__jogador.estaVivo())
