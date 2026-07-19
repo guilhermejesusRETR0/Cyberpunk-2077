@@ -1,3 +1,24 @@
+# ============================================================
+# CLASSE JOGO
+# É o "maestro" de tudo: guarda o estado geral da partida (jogador,
+# zona atual, loja, etc.) e controla o menu principal, o combate,
+# a loja, o Afterlife e a progressão entre zonas.
+#
+# ESTRUTURA GERAL DO JOGO:
+#   - Cada "zona" (masmorra) tem um número (1 a 5), um nome, uma
+#     descrição, os caminhos para onde se pode avançar, e o inimigo
+#     que aparece lá. Tudo isto está guardado em __dadosMasmorras.
+#   - iniciar() é o ponto de entrada: mostra a intro, cria o jogador,
+#     e depois fica num ciclo a mostrar o menu principal até o
+#     jogador sair ou morrer (verificarFimJogo()).
+#
+# ONDE ALTERAR COISAS COMUNS:
+#   - Para mudar zonas/inimigos: ver __dadosMasmorras no __init__.
+#   - Para mudar o texto da intro: ver mostrarIntroducao().
+#   - Para mudar os atributos iniciais do jogador: ver criarJogador().
+#   - Para mudar as opções do menu: ver mostrarMenuPrincipal() e iniciar().
+# ============================================================
+
 from Inimigo import Inimigo
 from Jogador import Jogador
 from Loja import Loja
@@ -8,16 +29,23 @@ from Afterlife import Afterlife
 
 class Jogo:
     def __init__(self):
-        self.__jogador = None
-        self.__masmorraAtual = 1
-        self.__inimigoAtual = None
+        self.__jogador = None            # Ainda não existe jogador até iniciar() correr
+        self.__masmorraAtual = 1         # O jogo comeca sempre na zona 1
+        self.__inimigoAtual = None       # Nenhum inimigo em combate no inicio
         self.__loja = Loja()
         self.__afterlife = Afterlife()
-        self.__terminado = False
-        self.__totalZonas = 5
+        self.__terminado = False         # Fica True quando o jogo deve parar
+        self.__totalMasmorras = 5        # Numero total de zonas no jogo
         self.__descansosUsados = 0
-        self.__descansosMaximos = self.__totalZonas // 3
-        self.__zonas = {
+        self.__descansosMaximos = self.calcularDescansosMaximos()
+
+        # Dados brutos de configuracao de cada zona: nome, descricao,
+        # para onde se pode avancar ("caminhos") e os dados do inimigo
+        # que aparece nessa zona (nome, vida, ataque, defesa, exp, moedas).
+        #
+        # PARA ADICIONAR/ALTERAR UMA ZONA: basta editar/acrescentar uma
+        # entrada neste dicionario. Não é preciso tocar em mais nada.
+        self.__dadosMasmorras = {
             1: {
                 "nome": "Bairro controlado por gangues",
                 "descricao": "Neon a piscar, portas corroidas e um cheiro a polvora que nunca te abandona.",
@@ -50,6 +78,13 @@ class Jogo:
             },
         }
 
+        # Objetos Masmorra propriamente ditos, construidos a partir dos
+        # dados brutos acima (ver criarMasmorras()).
+        self.__masmorras = {}
+        self.criarMasmorras()
+
+    # ---------- GETTERS ----------
+
     def getJogador(self):
         return self.__jogador
 
@@ -64,6 +99,14 @@ class Jogo:
 
     def getTerminado(self):
         return self.__terminado
+
+    def getMasmorras(self):
+        return dict(self.__masmorras)
+
+    def getTotalMasmorras(self):
+        return self.__totalMasmorras
+
+    # ---------- SETTERS ----------
 
     def setJogador(self, jogador):
         self.__jogador = jogador
@@ -80,7 +123,15 @@ class Jogo:
     def setTerminado(self, terminado):
         self.__terminado = terminado
 
+    # ---------- LEITURA DE INPUT (funções auxiliares) ----------
+    # Estas três funções existem para ler o que o jogador escreve na
+    # consola de forma "segura" - ou seja, sem o programa rebentar se
+    # o jogador escrever algo inesperado ou fechar o programa a meio.
+
     def lerOpcao(self, mensagem):
+        # Lê uma linha de texto simples do jogador (sem validação de tipo).
+        # Se o jogador fechar o programa (Ctrl+C ou EOF), terminamos o jogo
+        # em vez de deixar o programa rebentar com um erro feio.
         try:
             return input(mensagem).strip()
         except (EOFError, KeyboardInterrupt):
@@ -89,6 +140,10 @@ class Jogo:
             return ""
 
     def lerInteiroEntre(self, mensagem, minimo, maximo):
+        # Lê um número inteiro do jogador, repetindo a pergunta enquanto
+        # a resposta não for um número válido dentro do intervalo pedido.
+        # Isto evita que o jogo rebente se o jogador escrever texto em
+        # vez de um número (ex: escrever "abc" numa pergunta que espera 1-5).
         while not self.__terminado:
             valorTexto = self.lerOpcao(mensagem)
             if self.__terminado:
@@ -108,15 +163,40 @@ class Jogo:
         return None
 
     def esperarEnterSeguro(self, mensagem):
+        # Pausa a execução até o jogador pressionar ENTER.
+        # Usa-se em vez de Recursos.esperarEnter() quando também queremos
+        # proteção contra o jogador fechar o programa a meio (Ctrl+C).
         try:
             input("\n" + mensagem)
         except (EOFError, KeyboardInterrupt):
             pass
 
-    def __dadosZona(self, numeroZona):
-        return self.__zonas.get(numeroZona, self.__zonas[self.__totalZonas])
+    # ---------- CRIAÇÃO E CONSULTA DE MASMORRAS ----------
 
-    def iniciarJogo(self):
+    def criarMasmorras(self):
+        # Constrói os objetos Masmorra (ver Masmorra.py) a partir dos
+        # dados brutos definidos em __dadosMasmorras.
+        self.__masmorras = {}
+        for numero, dados in self.__dadosMasmorras.items():
+            self.__masmorras[numero] = Masmorra(numero, dados["nome"], dados["descricao"], dados["caminhos"])
+        return self.__masmorras
+
+    def procurarMasmorraPorNumero(self, numero):
+        # Devolve o objeto Masmorra correspondente a este número.
+        # Se o número não existir (situação anormal), devolve a última
+        # zona como "rede de segurança" para o jogo nunca rebentar.
+        return self.__masmorras.get(numero, self.__masmorras[self.__totalMasmorras])
+
+    def calcularDescansosMaximos(self):
+        # Fórmula do jogo: o número de descansos permitidos é o total
+        # de zonas a dividir por 3 (divisão inteira).
+        return self.__totalMasmorras // 3
+
+    # ---------- CICLO PRINCIPAL DO JOGO ----------
+
+    def iniciar(self):
+        # Ponto de entrada do jogo: mostra a intro, pede o nome do
+        # jogador, cria a personagem, e entra no ciclo do menu principal.
         self.mostrarIntroducao()
 
         nome = self.lerOpcao("\nInsere o nome da tua mercenaria: ")
@@ -129,10 +209,12 @@ class Jogo:
 
         self.criarJogador(nome)
 
-        while not self.__terminado:
+        # Ciclo principal: repete o menu até o jogo terminar
+        # (jogador saiu, morreu, ou venceu o jogo).
+        while not self.verificarFimJogo():
             self.mostrarMenuPrincipal()
-            opcao = self.lerInteiroEntre("Escolha: ", 1, 6)
-            if self.__terminado or opcao is None:
+            opcao = self.lerInteiroEntre("Escolha: ", 1, 8)
+            if self.verificarFimJogo() or opcao is None:
                 break
 
             Recursos.limparConsola()
@@ -148,19 +230,28 @@ class Jogo:
                 self.visitarLoja()
 
             elif opcao == 4:
-                self.visitarAfterlife()
+                self.mostrarInventario()
 
             elif opcao == 5:
-                self.descansar()
+                self.descansarJogador()
 
             elif opcao == 6:
+                self.mostrarCaminhosDisponiveis()
+
+            elif opcao == 7:
+                self.visitarAfterlife()
+
+            elif opcao == 8:
                 Recursos.pararAudio()
                 print("\nDecidiste desaparecer da cidade.")
                 self.__terminado = True
 
     def mostrarIntroducao(self):
+        # Mostra o ecrã de abertura do jogo: logo ASCII, som e texto
+        # narrativo. Se quiseres alterar a história de abertura, é
+        # aqui que deves editar os textos dos vários print().
         Recursos.limparConsola()
-        print("\033[33m")
+        print("\033[33m")  # Código ANSI: muda a cor do texto para amarelo
         Recursos.tocarAudio("assets/audio/intro.wav")
         Recursos.tocarAudioFundo("The-Rebel-Path-_Cyberpunk-2077-Soundtrack_.wav")
         Recursos.imprimirAscii(
@@ -171,7 +262,7 @@ class Jogo:
     ======================================
             """
         )
-        print("\033[0m")
+        print("\033[0m")  # Código ANSI: volta à cor normal do texto
 
         Recursos.pausa(1)
         print("\nNeon. Chuva. Maquinas a consumir o resto da tua sanidade.")
@@ -187,6 +278,9 @@ class Jogo:
         print("Bem-vindo ao abismo digital.")
 
     def criarJogador(self, nome):
+        # Cria a personagem do jogador com os valores iniciais do jogo.
+        # PARA ALTERAR OS VALORES INICIAIS (vida, ataque, moedas, etc.),
+        # basta mudar os números aqui.
         vidaMaxima = 100
         ataque = 10
         defesa = 5
@@ -202,39 +296,44 @@ class Jogo:
         print("Estado: com um credito e varios problemas")
 
     def mostrarMenuPrincipal(self):
+        # Mostra o menu principal. Se quiseres adicionar/remover uma
+        # opção, tens de fazer 3 coisas em conjunto:
+        #   1. Adicionar/remover o "print" correspondente aqui.
+        #   2. Ajustar o intervalo em "self.lerInteiroEntre('Escolha: ', 1, 8)"
+        #      dentro de iniciar(), se mudares o número total de opções.
+        #   3. Adicionar/remover o "elif opcao == N:" dentro de iniciar().
         Recursos.limparConsola()
         print("\n===== MENU PRINCIPAL =====")
         print("Zona atual:", self.__masmorraAtual)
         print("Descansos usados:", self.__descansosUsados, "/", self.__descansosMaximos)
-        print("1 - Ver perfil")
-        print("2 - Explorar zona")
-        print("3 - Visitar mercado negro")
-        print("4 - Visitar Afterlife")
-        print("5 - Procurar assistencia")
-        print("6 - Sair")
+        print("1 - Ver estado")
+        print("2 - Explorar masmorra")
+        print("3 - Visitar loja")
+        print("4 - Ver inventario")
+        print("5 - Descansar")
+        print("6 - Ver caminhos disponiveis")
+        print("7 - Visitar Afterlife")
+        print("8 - Sair")
 
-    def criarMasmorraAtual(self):
-        dados = self.__dadosZona(self.__masmorraAtual)
-        return Masmorra(
-            self.__masmorraAtual,
-            dados["nome"],
-            dados["descricao"],
-            dados["caminhos"]
-        )
+    # ---------- EXPLORAÇÃO E COMBATE ----------
 
-    def criarInimigoDaMasmorra(self):
-        dados = self.__dadosZona(self.__masmorraAtual)
+    def criarInimigoAtual(self):
+        # Cria um novo Inimigo com base nos dados guardados para a zona atual.
+        dados = self.__dadosMasmorras.get(self.__masmorraAtual, self.__dadosMasmorras[self.__totalMasmorras])
         return Inimigo(*dados["inimigo"])
 
     def explorarMasmorra(self):
+        # Mostra a informação da zona atual e coloca o jogador em combate
+        # contra o inimigo dessa zona.
         if self.__jogador is None:
             print("Ainda nao existe uma mercenaria criada.")
             return
 
-        masmorra = self.criarMasmorraAtual()
-        self.__inimigoAtual = self.criarInimigoDaMasmorra()
+        masmorra = self.procurarMasmorraPorNumero(self.__masmorraAtual)
+        self.__inimigoAtual = self.criarInimigoAtual()
 
-        masmorra.mostrarInfo()
+        masmorra.mostrarInformacao()
+        masmorra.mostrarCaminhosDisponiveis()
         print("\nAo entrares, sentes o pulso da cidade na pele.")
         print("Um alvo apareceu na tua frente!")
         print("Inimigo:", self.__inimigoAtual.getNome())
@@ -242,6 +341,10 @@ class Jogo:
         self.iniciarCombate()
 
     def __contraAtacarSeNecessario(self):
+        # Função auxiliar interna: faz o inimigo atacar de volta, DEPOIS
+        # da ação do jogador, se o inimigo ainda estiver vivo.
+        # Se esse contra-ataque matar o jogador, chama processarDerrota()
+        # e devolve True (sinal para o combate parar imediatamente).
         if self.__inimigoAtual is not None and self.__inimigoAtual.estaVivo():
             self.__inimigoAtual.atacar(self.__jogador)
             if not self.__jogador.estaVivo():
@@ -250,6 +353,9 @@ class Jogo:
         return False
 
     def iniciarCombate(self):
+        # O ciclo de combate: mostra as opções, executa a ação escolhida,
+        # e, se necessário, faz o inimigo contra-atacar. Repete até o
+        # jogador ou o inimigo morrer, ou o jogador fugir.
         if self.__jogador is None or self.__inimigoAtual is None:
             print("Nao ha combate activo.")
             return
@@ -268,6 +374,9 @@ class Jogo:
                 break
 
             if opcao == 1:
+                # Atacar: o jogador dá dano ao inimigo. Se o inimigo
+                # morrer com este ataque, processamos a vitória e
+                # terminamos o combate (o inimigo já não pode contra-atacar).
                 self.__jogador.atacar(self.__inimigoAtual)
                 if not self.__inimigoAtual.estaVivo():
                     self.processarVitoria()
@@ -276,6 +385,8 @@ class Jogo:
                     break
 
             elif opcao == 2:
+                # Usar MaxDoc (poção): cura o jogador. Note-se que usar
+                # uma poção NÃO impede o inimigo de atacar a seguir.
                 if self.__jogador.usarPocao():
                     if self.__inimigoAtual.estaVivo() and self.__contraAtacarSeNecessario():
                         break
@@ -285,7 +396,9 @@ class Jogo:
                         break
 
             elif opcao == 3:
-                if self.__jogador.usarConsumivel(self.__inimigoAtual):
+                # Usar consumível de combate: causa dano ao inimigo
+                # (dano aleatório, ver ConsumivelCombate.gerarDano()).
+                if self.__jogador.usarConsumivelCombate(self.__inimigoAtual):
                     if not self.__inimigoAtual.estaVivo():
                         self.processarVitoria()
                         break
@@ -297,23 +410,41 @@ class Jogo:
                         break
 
             elif opcao == 4:
+                # Ver estado: apenas mostra informação, mas ainda "gasta"
+                # o turno (o inimigo ataca a seguir).
                 self.__jogador.mostrarEstado()
                 self.__inimigoAtual.mostrarEstado()
                 if self.__contraAtacarSeNecessario():
                     break
 
             elif opcao == 5:
+                # Fugir: termina o combate imediatamente, sem recompensa
+                # e sem o inimigo atacar.
                 print("Fugiste do combate.")
                 break
 
-    def escolherProximaZona(self, caminhos):
+    # ---------- CAMINHOS E PROGRESSÃO ----------
+
+    def mostrarCaminhosDisponiveis(self):
+        # Mostra, fora de combate, para que zonas o jogador pode seguir
+        # a partir da zona atual (opção 6 do menu principal).
+        masmorra = self.procurarMasmorraPorNumero(self.__masmorraAtual)
+        print("\n===== CAMINHOS DISPONIVEIS =====")
+        masmorra.mostrarCaminhosDisponiveis()
+        for numero in masmorra.getCaminhosDisponiveis():
+            print(f"  Zona {numero}: {self.procurarMasmorraPorNumero(numero).getNome()}")
+        self.esperarEnterSeguro("Premir ENTER para voltar a rua...")
+
+    def escolherProximaMasmorra(self, caminhos):
+        # Pede ao jogador para escolher, entre a lista de caminhos
+        # possíveis, para onde quer avançar depois de vencer um combate.
+        # Devolve o número da zona escolhida (ou None se cancelado).
         if not caminhos:
             return None
 
         print("\nCaminhos disponiveis:")
         for indice, zona in enumerate(caminhos, start=1):
-            dados = self.__dadosZona(zona)
-            print(f"{indice} - Zona {zona}: {dados['nome']}")
+            print(f"{indice} - Zona {zona}: {self.procurarMasmorraPorNumero(zona).getNome()}")
 
         escolha = self.lerInteiroEntre(f"Escolhe um caminho (1-{len(caminhos)}): ", 1, len(caminhos))
         if self.__terminado or escolha is None:
@@ -322,6 +453,10 @@ class Jogo:
         return caminhos[escolha - 1]
 
     def processarVitoria(self):
+        # Chamado quando o jogador vence um combate.
+        # Dá experiência (com bónus de companheiros, se houver) e moedas,
+        # e depois decide o que acontece a seguir: fim do jogo (se esta
+        # era a última zona) ou escolha da próxima zona.
         print("\nVitoria!")
         print(f"{self.__jogador.getNome()} derrotou {self.__inimigoAtual.getNome()}.")
 
@@ -335,37 +470,53 @@ class Jogo:
         self.__jogador.ganharMoedas(self.__inimigoAtual.getMoedas())
         self.__inimigoAtual = None
 
-        if self.__masmorraAtual >= self.__totalZonas:
+        # Se esta era a última zona (o "boss final"), o jogo termina em vitória.
+        if self.__masmorraAtual >= self.__totalMasmorras:
             print("Conseguiste destruir o nucleo da IA e salvar a cidade.")
             Recursos.pararAudio()
             self.__terminado = True
             return
 
-        caminhos = self.__dadosZona(self.__masmorraAtual)["caminhos"]
+        caminhos = self.procurarMasmorraPorNumero(self.__masmorraAtual).getCaminhosDisponiveis()
         if not caminhos:
             print("Nao ha mais caminhos disponiveis.")
             self.__terminado = True
             return
 
-        proximaZona = self.escolherProximaZona(caminhos)
+        proximaZona = self.escolherProximaMasmorra(caminhos)
         if proximaZona is not None:
-            self.__masmorraAtual = proximaZona
-            print(f"Seguiste para a zona {self.__masmorraAtual}.")
+            self.avancarParaMasmorra(proximaZona)
 
     def processarDerrota(self):
+        # Chamado quando a vida do jogador chega a 0. Termina o jogo.
         print("\nDerrota!")
         print("Os teus implantes falham. A cidade nao te esquece.")
         Recursos.pararAudio()
         self.__terminado = True
 
-    def avancarMasmorra(self):
-        if self.__masmorraAtual < self.__totalZonas:
-            self.__masmorraAtual += 1
-            print(f"Avancaste para a zona {self.__masmorraAtual}.")
+    def avancarParaMasmorra(self, numero):
+        # Move o jogador para a zona indicada (se ela existir).
+        if numero in self.__masmorras:
+            self.__masmorraAtual = numero
+            print(f"Seguiste para a zona {self.__masmorraAtual}.")
         else:
-            print("Ja atingiste o ultimo ponto da rede.")
+            print("Essa zona nao existe.")
+
+    # ---------- INVENTÁRIO, LOJA E AFTERLIFE ----------
+
+    def mostrarInventario(self):
+        # Mostra as poções e consumíveis guardados pelo jogador
+        # (opção 4 do menu principal).
+        print("\n===== INVENTARIO =====")
+        self.__jogador.mostrarPocoes()
+        self.__jogador.mostrarConsumiveisCombate()
+        print("Total:", self.__jogador.consultarTotalItensInventario(), "/", self.__jogador.getLimiteInventario())
+        self.esperarEnterSeguro("Premir ENTER para voltar a rua...")
 
     def visitarLoja(self):
+        # Gera os produtos da loja para a zona atual e deixa o jogador
+        # comprar itens num ciclo, até escolher saír ou a loja ficar
+        # sem stock.
         if self.__jogador is None:
             print("Ainda nao existe uma mercenaria criada.")
             return
@@ -374,16 +525,16 @@ class Jogo:
 
         while not self.__terminado:
             Recursos.limparConsola()
-            self.__loja.mostrarProdutos()
-            if not self.__loja.getItensDisponiveis():
+            self.__loja.mostrarLoja()
+            if not self.__loja.getItensVisiveis():
                 self.esperarEnterSeguro("A loja ficou sem stock. Pressiona ENTER para sair...")
                 return
 
             print("\n0 - Sair do mercado")
             escolha = self.lerInteiroEntre(
-                f"Escolhe um item (0-{len(self.__loja.getItensDisponiveis())}): ",
+                f"Escolhe um item (0-{len(self.__loja.getItensVisiveis())}): ",
                 0,
-                len(self.__loja.getItensDisponiveis())
+                len(self.__loja.getItensVisiveis())
             )
 
             if self.__terminado or escolha is None:
@@ -393,14 +544,16 @@ class Jogo:
                 print("Saiste do mercado.")
                 return
 
-            self.__loja.comprarItem(self.__jogador, escolha)
-            if not self.__loja.getItensDisponiveis():
+            self.__loja.venderItem(self.__jogador, escolha)
+            if not self.__loja.getItensVisiveis():
                 self.esperarEnterSeguro("A loja ficou sem stock. Pressiona ENTER para sair...")
                 return
 
             self.esperarEnterSeguro("Pressiona ENTER para continuar a ver a loja...")
 
     def visitarAfterlife(self):
+        # Mostra o menu do Afterlife (recrutamento de mercenários),
+        # num ciclo, até o jogador escolher voltar para a rua.
         if self.__jogador is None:
             print("Ainda nao existe uma mercenaria criada.")
             return
@@ -418,7 +571,11 @@ class Jogo:
 
             self.__afterlife.mostrarDetalhesMercenario(self.__jogador, escolha)
 
-    def descansar(self):
+    # ---------- DESCANSO E FIM DE JOGO ----------
+
+    def descansarJogador(self):
+        # Recupera 25 pontos de vida ao jogador, se ainda houver
+        # descansos disponíveis (ver calcularDescansosMaximos()).
         if self.__jogador is None:
             print("Ainda nao existe uma mercenaria criada.")
             return
@@ -427,9 +584,12 @@ class Jogo:
             print("Ja atingiste o limite de descansos.")
             return
 
-        self.__jogador.curar(25)
+        self.__jogador.recuperarVida(25)
         self.__descansosUsados += 1
         print(f"Descanso usado. Total: {self.__descansosUsados}/{self.__descansosMaximos}.")
 
-    def verificarFimDoJogo(self):
+    def verificarFimJogo(self):
+        # Devolve True se o jogo deve parar: ou porque foi marcado
+        # como terminado (__terminado), ou porque o jogador morreu.
+        # É esta função que controla o ciclo principal em iniciar().
         return self.__terminado or (self.__jogador is not None and not self.__jogador.estaVivo())
